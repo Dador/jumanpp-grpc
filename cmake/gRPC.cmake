@@ -1,14 +1,12 @@
-
-find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin) # Get full path to plugin
+find_program(GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin) # Get full path to plugin
 
 find_library(GRPC_LIBRARY NAMES grpc)
 find_library(GRPCPP_LIBRARY NAMES grpc++)
 find_library(GPR_LIBRARY NAMES gpr)
 set(GRPC_LIBRARIES ${GRPCPP_LIBRARY} ${GRPC_LIBRARY} ${GPR_LIBRARY})
 if(GRPC_LIBRARIES)
-    message(STATUS "Found GRPC: ${GRPC_LIBRARIES}; plugin - ${GRPC_CPP_PLUGIN}")
+    message(STATUS "Found GRPC: ${GRPC_LIBRARIES}; plugin - ${GRPC_CPP_PLUGIN_EXECUTABLE}")
 endif()
-
 
 function(PROTOBUF_GENERATE_GRPC_CPP SRCS HDRS)
   if(NOT ARGN)
@@ -16,8 +14,7 @@ function(PROTOBUF_GENERATE_GRPC_CPP SRCS HDRS)
     return()
   endif()
 
-  if(PROTOBUF_GENERATE_CPP_APPEND_PATH) # This variable is common for all types of output.
-    # Create an include path for each file specified
+  if(PROTOBUF_GENERATE_CPP_APPEND_PATH)
     foreach(FIL ${ARGN})
       get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
       get_filename_component(ABS_PATH ${ABS_FIL} PATH)
@@ -48,16 +45,21 @@ function(PROTOBUF_GENERATE_GRPC_CPP SRCS HDRS)
 
     list(APPEND ${SRCS} "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.grpc.pb.cc")
     list(APPEND ${HDRS} "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.grpc.pb.h")
+    list(APPEND ${SRCS} "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc")
+    list(APPEND ${HDRS} "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h")
 
     add_custom_command(
       OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.grpc.pb.cc"
              "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.grpc.pb.h"
+             "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc"
+             "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h"
       COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
       ARGS --grpc_out=${CMAKE_CURRENT_BINARY_DIR}
-           --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+           --cpp_out=${CMAKE_CURRENT_BINARY_DIR}
+           --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN_EXECUTABLE}
            ${_protobuf_include_path} ${ABS_FIL}
       DEPENDS ${ABS_FIL} ${PROTOBUF_PROTOC_EXECUTABLE}
-      COMMENT "Running gRPC C++ protocol buffer compiler on ${FIL}"
+      COMMENT "Running gRPC and C++ protocol buffer compiler on ${FIL}"
       VERBATIM)
   endforeach()
 
