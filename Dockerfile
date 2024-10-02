@@ -53,6 +53,7 @@ ENV LANG="ja_JP.UTF-8" \
 RUN localedef -f UTF-8 -i ja_JP ja_JP.utf8
 
 COPY --from=builder /usr/local /usr/local
+COPY --from=builder /usr/lib /usr/lib
 COPY --from=builder /app/jumanpp-grpc/build/src/jumandic/jumanpp-jumandic-grpc /usr/local/bin/jumanpp-jumandic-grpc
 
 CMD ["jumanpp-jumandic-grpc", "--config=/usr/local/libexec/jumanpp/jumandic.config", "--port=51231", "--threads=1"]
